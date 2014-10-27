@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <malloc.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
@@ -21,6 +22,8 @@ char currentPath[4096];
 char tmpStr[4096];
 u32 dataBuffer[DATA_BUFFER_SIZE/4];
 
+u32 currentIP;
+
 void ftp_init()
 {
 	Result ret;
@@ -31,10 +34,12 @@ void ftp_init()
 	FSUSER_OpenArchive(NULL, &sdmcArchive);
 	print("FSUSER_OpenArchive %08X\n", (unsigned int)ret);
 
-	ret=SOC_Initialize((u32*)0x8bae000, 0x100000);
+	ret=SOC_Initialize((u32*)memalign(0x1000, 0x100000), 0x100000);
 	print("SOC_Initialize %08X\n", (unsigned int)ret);
 
 	sprintf(currentPath, "/");
+
+	currentIP=(u32)gethostid();
 }
 
 void ftp_exit()
@@ -136,7 +141,7 @@ int ftp_processCommand(int s, char* data)
 		ftp_sendResponse(s, 257, tmpStr);
 	}else if(!strcmp(cmd, "PASV")){
 		char response[32];
-		sprintf(response, "Entering Passive Mode (192,168,0,17,%d,%d)",(dataPort-(dataPort%256))/256,dataPort%256);
+		sprintf(response, "Entering Passive Mode (%d,%d,%d,%d,%d,%d)", (int)(currentIP>>24), (int)((currentIP>>16)&0xFF), (int)((currentIP>>8)&0xFF), (int)(currentIP&0xFF), dataPort>>8, dataPort&0xFF);
 		ftp_sendResponse(s, 200, response);
 	}else if(!strcmp(cmd, "LIST")){
 		int data_s=ftp_openDataChannel();
@@ -155,6 +160,7 @@ int ftp_processCommand(int s, char* data)
 			if(!entriesRead)break;
 			unicodeToChar(data, entryBuffer);
 			siprintf((char*)entryBuffer, "%crwxrwxrwx   2 3DS        %d Feb  1  2009 %s\r\n",entryBuffer[0x21c/2]?'d':'-',entryBuffer[0x220/2]|(entryBuffer[0x222/2]<<16),data);
+			
 			send(data_s, entryBuffer, strlen((char*)entryBuffer), 0);
 		}while(entriesRead>0);
 		u8 endByte=0x0;

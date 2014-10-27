@@ -11,6 +11,9 @@
 char superStr[8192];
 int cnt;
 
+char* quotes[]={"\"wow this is the worst thing i've seen in a while\"\n",
+			"\"<Namidairo> that hurts my brain\"\n"};
+
 s32 pcCos(u16 v)
 {
 	return costable[v&0x1FF];
@@ -31,10 +34,13 @@ void drawFrame()
 			bufAdr[v+2]=(pcCos(i+128-cnt)+4096)/32;
 		}
 	}
-	drawString(bufAdr, "ftPONY v0.0001\n", 0, 0);
-	drawString(bufAdr, "\"wow this is the worst thing i've seen in a while\"\n", 0, 8);
+	drawString(bufAdr, "ftPONY v0.0002\n", 0, 0);
+	drawString(bufAdr, quotes[1], 0, 8);
 	drawString(bufAdr, superStr, 16, 20);
 	cnt++;
+
+	gfxFlushBuffers();
+	gfxSwapBuffers();
 }
 
 int main()
@@ -63,9 +69,6 @@ int main()
 
 			hidScanInput();
 			if(hidKeysDown()&KEY_B)break;
-
-			gfxFlushBuffers();
-			gfxSwapBuffers();
 		}
 		else if(status == APP_SUSPENDING)
 		{
