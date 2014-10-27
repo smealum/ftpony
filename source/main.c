@@ -13,6 +13,7 @@ int cnt;
 
 char* quotes[]={"\"wow this is the worst thing i've seen in a while\"\n",
 			"\"<Namidairo> that hurts my brain\"\n"};
+const int numQuotes = 2;
 
 s32 pcCos(u16 v)
 {
@@ -35,7 +36,7 @@ void drawFrame()
 		}
 	}
 	drawString(bufAdr, "ftPONY v0.0002\n", 0, 0);
-	drawString(bufAdr, quotes[1], 0, 8);
+	drawString(bufAdr, quotes[rand()%numQuotes], 0, 8);
 	drawString(bufAdr, superStr, 16, 20);
 	cnt++;
 
@@ -53,6 +54,8 @@ int main()
 
 	aptSetupEventHandler();
 	gfxSet3D(false);
+
+	srand(svcGetSystemTick());
 
 	superStr[0]=0;
 	ftp_init();

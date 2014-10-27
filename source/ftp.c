@@ -141,7 +141,7 @@ int ftp_processCommand(int s, char* data)
 		ftp_sendResponse(s, 257, tmpStr);
 	}else if(!strcmp(cmd, "PASV")){
 		char response[32];
-		sprintf(response, "Entering Passive Mode (%d,%d,%d,%d,%d,%d)", (int)(currentIP>>24), (int)((currentIP>>16)&0xFF), (int)((currentIP>>8)&0xFF), (int)(currentIP&0xFF), dataPort>>8, dataPort&0xFF);
+		sprintf(response, "Entering Passive Mode (%d,%d,%d,%d,%d,%d)", (int)(currentIP&0xFF), (int)((currentIP>>8)&0xFF), (int)((currentIP>>16)&0xFF), (int)(currentIP>>24), dataPort>>8, dataPort&0xFF);
 		ftp_sendResponse(s, 200, response);
 	}else if(!strcmp(cmd, "LIST")){
 		int data_s=ftp_openDataChannel();
