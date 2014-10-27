@@ -9,19 +9,14 @@
 
 #include "output.h"
 #include "ftp.h"
+#include "ftp_cmd.h"
 
 FS_archive sdmcArchive;
 
 char tmpBuffer[512];
 const int commandPort=5000;
-const int dataPort=5001;
-
-#define DATA_BUFFER_SIZE (512*1024)
-
+int dataPort=5001;
 char currentPath[4096];
-char tmpStr[4096];
-u32 dataBuffer[DATA_BUFFER_SIZE/4];
-
 u32 currentIP;
 
 void ftp_init()
@@ -110,13 +105,6 @@ int ftp_sendResponse(int s, int n, char* mes)
 	return send(s,data,strlen(data)+1,0);
 }
 
-void unicodeToChar(char* dst, u16* src)
-{
-	if(!src || !dst)return;
-	while(*src)*(dst++)=(*(src++))&0xFF;
-	*dst=0x00;
-}
-
 int linelen(char* str)
 {
 	int i=0; while(*str && *str!='\n' && *str!='\r'){i++;str++;}
@@ -136,92 +124,9 @@ int ftp_processCommand(int s, char* data)
 
 	print("\nreceived command : %s (%s)",cmd,arg);
 
-	if(!strcmp(cmd, "PWD")){
-		siprintf(tmpStr, "\"%s\"",currentPath);
-		ftp_sendResponse(s, 257, tmpStr);
-	}else if(!strcmp(cmd, "PASV")){
-		char response[32];
-		sprintf(response, "Entering Passive Mode (%d,%d,%d,%d,%d,%d)", (int)(currentIP&0xFF), (int)((currentIP>>8)&0xFF), (int)((currentIP>>16)&0xFF), (int)(currentIP>>24), dataPort>>8, dataPort&0xFF);
-		ftp_sendResponse(s, 200, response);
-	}else if(!strcmp(cmd, "LIST")){
-		int data_s=ftp_openDataChannel();
-		ftp_sendResponse(s, 150, "opening ASCII data channel");
-
-		//send LIST data
-		Handle dirHandle;
-		FS_path dirPath=FS_makePath(PATH_CHAR, currentPath);
-		FSUSER_OpenDirectory(NULL, &dirHandle, sdmcArchive, dirPath);
-
-		u32 entriesRead=0;
-		do{
-			u16 entryBuffer[512];
-			char data[256];
-			FSDIR_Read(dirHandle, &entriesRead, 1, (FS_dirent*)entryBuffer);
-			if(!entriesRead)break;
-			unicodeToChar(data, entryBuffer);
-			siprintf((char*)entryBuffer, "%crwxrwxrwx   2 3DS        %d Feb  1  2009 %s\r\n",entryBuffer[0x21c/2]?'d':'-',entryBuffer[0x220/2]|(entryBuffer[0x222/2]<<16),data);
-			
-			send(data_s, entryBuffer, strlen((char*)entryBuffer), 0);
-		}while(entriesRead>0);
-		u8 endByte=0x0;
-		send(data_s, &endByte, 1, 0);
-		FSDIR_Close(dirHandle);
-
-		closesocket(data_s);
-		ftp_sendResponse(s, 226, "transfer complete");
-	}else if(!strcmp(cmd, "STOR")){
-		ftp_sendResponse(s, 150, "opening binary data channel");
-		int data_s=ftp_openDataChannel();
-
-		sprintf(tmpStr, "%s%s",currentPath,arg);
-		Handle fileHandle;
-		FSUSER_OpenFile(NULL, &fileHandle, sdmcArchive, FS_makePath(PATH_CHAR, tmpStr), FS_OPEN_WRITE|FS_OPEN_CREATE, 0);
-		int ret;
-		u32 totalSize=0;
-		while((ret=recv(data_s, dataBuffer, DATA_BUFFER_SIZE, 0))>0){FSFILE_Write(fileHandle, (u32*)&ret, totalSize, (u32*)dataBuffer, ret, 0x10001);totalSize+=ret;}
-		FSFILE_Close(fileHandle);
-
-		closesocket(data_s);
-		ftp_sendResponse(s, 226, "transfer complete");
-	}else if(!strcmp(cmd, "RETR")){
-		ftp_sendResponse(s, 150, "opening binary data channel");
-		int data_s=ftp_openDataChannel();
-
-		sprintf(tmpStr, "%s%s",currentPath,arg);
-		print("\n%s",tmpStr);
-		Handle fileHandle;
-		FSUSER_OpenFile(NULL, &fileHandle, sdmcArchive, FS_makePath(PATH_CHAR, tmpStr), FS_OPEN_READ, 0);
-		int ret;
-		u32 readSize=0;
-		u32 totalSize=0;
-		do{
-			ret=FSFILE_Read(fileHandle, (u32*)&readSize, totalSize, (u32*)dataBuffer, DATA_BUFFER_SIZE);
-			if(ret || !readSize)break;
-			ret=send(data_s, dataBuffer, readSize, 0);
-			totalSize+=readSize;
-		}while(readSize && ret>0);
-		FSFILE_Close(fileHandle);
-
-		closesocket(data_s);
-		ftp_sendResponse(s, 226, "transfer complete");
-	}else if(!strcmp(cmd, "USER")){
-		ftp_sendResponse(s, 200, "password ?");
-	}else if(!strcmp(cmd, "PASS")){
-		ftp_sendResponse(s, 200, "ok");
-	}else if(!strcmp(cmd, "CWD")){
-		if(arg[0]=='/')strcpy(currentPath,arg);
-		else strcat(currentPath,arg);
-		strcat(currentPath,"/");
-		ftp_sendResponse(s, 200, "ok");
-	}else if(!strcmp(cmd, "RETR")){
-		ftp_sendResponse(s, 200, "ok");
-	}else if(!strcmp(cmd, "TYPE")){
-		ftp_sendResponse(s, 200, "changed type");
-	}else if(!strcmp(cmd, "QUIT")){
-		ftp_sendResponse(s, 221, "disconnecting");
-	}else{
-		ftp_sendResponse(s, 502, "invalid command");
-	}
+	int i;
+	for(i=0; i<ftp_cmd_num; i++)if(!strcmp(cmd, ftp_cmd[i].name)){ftp_cmd[i].handler(s, cmd, arg); break;}
+	if(i>=ftp_cmd_num)ftp_sendResponse(s, 502, "invalid command");
 	return 0;
 }
 

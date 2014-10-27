@@ -53,7 +53,6 @@ int main()
 	irrstInit(NULL);
 	gfxInit();
 
-	aptSetupEventHandler();
 	gfxSet3D(false);
 
 	srand(svcGetSystemTick());
