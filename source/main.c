@@ -13,7 +13,7 @@ int cnt;
 
 char* quotes[]={"\"wow this is the worst thing i've seen in a while\"\n",
 			"\"<Namidairo> that hurts my brain\"\n"};
-const int numQuotes = 2;
+const int numQuotes = sizeof(quotes)/sizeof(*quotes);
 int curQuote;
 
 s32 pcCos(u16 v)

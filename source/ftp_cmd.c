@@ -31,9 +31,8 @@ void ftp_cmd_PWD(int s, char* cmd, char* arg)
 
 void ftp_cmd_PASV(int s, char* cmd, char* arg)
 {
-	char response[32];
-	sprintf(response, "Entering Passive Mode (%d,%d,%d,%d,%d,%d)", (int)(currentIP&0xFF), (int)((currentIP>>8)&0xFF), (int)((currentIP>>16)&0xFF), (int)(currentIP>>24), dataPort>>8, dataPort&0xFF);
-	ftp_sendResponse(s, 200, response);
+	sprintf(tmpStr, "Entering Passive Mode (%d,%d,%d,%d,%d,%d)", (int)(currentIP&0xFF), (int)((currentIP>>8)&0xFF), (int)((currentIP>>16)&0xFF), (int)(currentIP>>24), dataPort>>8, dataPort&0xFF);
+	ftp_sendResponse(s, 200, tmpStr);
 }
 
 void ftp_cmd_LIST(int s, char* cmd, char* arg)
@@ -72,8 +71,9 @@ void ftp_cmd_STOR(int s, char* cmd, char* arg)
 
 	sprintf(tmpStr, "%s%s",currentPath,arg);
 	Handle fileHandle;
-	FSUSER_OpenFile(NULL, &fileHandle, sdmcArchive, FS_makePath(PATH_CHAR, tmpStr), FS_OPEN_WRITE|FS_OPEN_CREATE, 0);
 	int ret;
+	ret=FSUSER_OpenFile(NULL, &fileHandle, sdmcArchive, FS_makePath(PATH_CHAR, tmpStr), FS_OPEN_WRITE|FS_OPEN_CREATE, 0);
+	print("\n  storing %s (%08X)\n", tmpStr, ret);
 	u32 totalSize=0;
 	while((ret=recv(data_s, dataBuffer, DATA_BUFFER_SIZE, 0))>0){FSFILE_Write(fileHandle, (u32*)&ret, totalSize, (u32*)dataBuffer, ret, 0x10001);totalSize+=ret;}
 	FSFILE_Close(fileHandle);
@@ -118,9 +118,12 @@ void ftp_cmd_PASS(int s, char* cmd, char* arg)
 
 void ftp_cmd_CWD(int s, char* cmd, char* arg)
 {
+	//TODO : proper directory navigation code, with error reporting...
 	if(arg[0]=='/')strcpy(currentPath,arg);
 	else strcat(currentPath,arg);
-	strcat(currentPath,"/");
+	int l=strlen(currentPath);
+	if(!l || currentPath[l-1]!='/')strcat(currentPath,"/");
+	print("\n  => %s", currentPath);
 	ftp_sendResponse(s, 200, "ok");
 }
 
