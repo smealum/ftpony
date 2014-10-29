@@ -21,6 +21,22 @@ s32 pcCos(u16 v)
 	return costable[v&0x1FF];
 }
 
+int countLines(char* str)
+{
+	if(!str)return 0;
+	int cnt; for(cnt=1;*str=='\n'?++cnt:*str;str++);
+	return cnt;
+}
+
+void cutLine(char* str)
+{
+	if(!str || !*str)return;
+	char* str2=str;
+	for(;*str2&&*(str2+1)&&*str2!='\n';str2++);
+	str2++;
+	memmove(str,str2,strlen(str2)+1);
+}
+
 void drawFrame()
 {
 	u8* bufAdr=gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL);
@@ -38,6 +54,8 @@ void drawFrame()
 	}
 	drawString(bufAdr, "ftPONY v0.0002\n", 0, 0);
 	drawString(bufAdr, quotes[curQuote], 0, 8);
+	i = countLines(superStr);
+	while(i>240/8-3){cutLine(superStr);i--;}
 	drawString(bufAdr, superStr, 16, 20);
 	cnt++;
 
