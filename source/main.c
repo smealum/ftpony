@@ -31,9 +31,7 @@ int countLines(char* str)
 void cutLine(char* str)
 {
 	if(!str || !*str)return;
-	char* str2=str;
-	for(;*str2&&*(str2+1)&&*str2!='\n';str2++);
-	str2++;
+	char* str2=str;	for(;*str2&&*(str2+1)&&*str2!='\n';str2++);	str2++;
 	memmove(str,str2,strlen(str2)+1);
 }
 
