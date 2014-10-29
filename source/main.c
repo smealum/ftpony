@@ -12,7 +12,10 @@ char superStr[8192];
 int cnt;
 
 char* quotes[]={"\"wow this is the worst thing i've seen in a while\"\n",
-			"\"<Namidairo> that hurts my brain\"\n"};
+				"\"<Namidairo> that hurts my brain\"\n",
+				"\"<mtheall> let's make it like really good code\"\n",
+				"\"//this code is not meant to be readable\"\n",
+				"\"// i just found it like this\"\n"};
 const int numQuotes = sizeof(quotes)/sizeof(*quotes);
 int curQuote;
 
@@ -50,11 +53,11 @@ void drawFrame()
 			bufAdr[v+2]=(pcCos(i+128-cnt)+4096)/32;
 		}
 	}
-	drawString(bufAdr, "ftPONY v0.0002\n", 0, 0);
-	drawString(bufAdr, quotes[curQuote], 0, 8);
+	gfxDrawText(GFX_TOP, GFX_LEFT, NULL, "ftPONY v0.0002\n", 240-fontDefault.height*1, 10);
+	gfxDrawText(GFX_TOP, GFX_LEFT, NULL, quotes[curQuote], 240-fontDefault.height*2, 10);
 	i = countLines(superStr);
-	while(i>240/8-3){cutLine(superStr);i--;}
-	drawString(bufAdr, superStr, 16, 20);
+	while(i>240/fontDefault.height-3){cutLine(superStr);i--;}
+	gfxDrawText(GFX_TOP, GFX_LEFT, NULL, superStr, 240-fontDefault.height*3, 20);
 	cnt++;
 
 	gfxFlushBuffers();
