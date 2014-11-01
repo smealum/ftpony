@@ -31,8 +31,8 @@ void ftp_cmd_PWD(int s, char* cmd, char* arg)
 
 void ftp_cmd_PASV(int s, char* cmd, char* arg)
 {
-	sprintf(tmpStr, "Entering Passive Mode (%d,%d,%d,%d,%d,%d)", (int)(currentIP&0xFF), (int)((currentIP>>8)&0xFF), (int)((currentIP>>16)&0xFF), (int)(currentIP>>24), dataPort>>8, dataPort&0xFF);
-	ftp_sendResponse(s, 200, tmpStr);
+	sprintf(tmpStr, "Entering Passive Mode (%d,%d,%d,%d,%d,%d).", (int)(currentIP&0xFF), (int)((currentIP>>8)&0xFF), (int)((currentIP>>16)&0xFF), (int)(currentIP>>24), dataPort>>8, dataPort&0xFF);
+	ftp_sendResponse(s, 227, tmpStr);
 }
 
 void ftp_cmd_LIST(int s, char* cmd, char* arg)
