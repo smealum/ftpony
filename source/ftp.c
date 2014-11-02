@@ -102,7 +102,7 @@ int ftp_sendResponse(int s, int n, char* mes)
 {
 	char data[128];
 	sprintf(data, "%d %s\r\n", n, mes);
-	return send(s,data,strlen(data)+1,0);
+	return send(s,data,strlen(data),0);
 }
 
 int linelen(char* str)
