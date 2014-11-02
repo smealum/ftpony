@@ -53,11 +53,16 @@ void drawFrame()
 			bufAdr[v+2]=(pcCos(i+128-cnt)+4096)/32;
 		}
 	}
-	gfxDrawText(GFX_TOP, GFX_LEFT, NULL, "ftPONY v0.0002\n", 240-fontDefault.height*1, 10);
-	gfxDrawText(GFX_TOP, GFX_LEFT, NULL, quotes[curQuote], 240-fontDefault.height*2, 10);
+	gfxDrawText(GFX_TOP, GFX_LEFT, NULL, "ftPONY v0.0003 gamma\n", 240-fontDefault.height*1, 10);
+	u32 ip = gethostid();
+	char bof[256];
+	sprintf(bof, "IP: %d.%d.%d.%d\n", ip & 0xFF, (ip>>8)&0xFF, (ip>>16)&0xFF, (ip>>24)&0xFF);
+	gfxDrawText(GFX_TOP, GFX_LEFT, NULL, bof, 240-fontDefault.height*2, 10);
+
+	gfxDrawText(GFX_TOP, GFX_LEFT, NULL, quotes[curQuote], 240-fontDefault.height*3, 10);
 	i = countLines(superStr);
 	while(i>240/fontDefault.height-3){cutLine(superStr);i--;}
-	gfxDrawText(GFX_TOP, GFX_LEFT, NULL, superStr, 240-fontDefault.height*3, 20);
+	gfxDrawText(GFX_TOP, GFX_LEFT, NULL, superStr, 240-fontDefault.height*4, 20);
 	cnt++;
 
 	gfxFlushBuffers();
