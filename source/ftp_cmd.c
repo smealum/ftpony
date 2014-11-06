@@ -64,6 +64,17 @@ void ftp_cmd_LIST(int s, char* cmd, char* arg)
 	ftp_sendResponse(s, 226, "transfer complete");
 }
 
+void ftp_cmd_DELE(int s, char* cmd, char* arg)
+{
+	ftp_sendResponse(s, 150, "Deleting file");
+	sprintf(tmpStr, "%s%s", currentPath, arg);
+	
+	int ret;
+	ret=FSUSER_DeleteFile(NULL, sdmcArchive, FS_makePath(PATH_CHAR, arg));
+	print("\n delete result %s (%08X) \n", arg, ret);
+	ftp_sendResponse(s, 226, "delete completed");
+}
+
 void ftp_cmd_STOR(int s, char* cmd, char* arg)
 {
 	ftp_sendResponse(s, 150, "opening binary data channel");
@@ -149,6 +160,7 @@ ftp_cmd_s ftp_cmd[]=
 	{"CWD", ftp_cmd_CWD},
 	{"TYPE", ftp_cmd_TYPE},
 	{"QUIT", ftp_cmd_QUIT},
+	{"DELE", ftp_cmd_DELE},
 };
 
 int ftp_cmd_num = sizeof(ftp_cmd)/sizeof(*ftp_cmd);
