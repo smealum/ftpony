@@ -64,6 +64,28 @@ void ftp_cmd_LIST(int s, char* cmd, char* arg)
 	ftp_sendResponse(s, 226, "transfer complete");
 }
 
+void ftp_cmd_MKD(int s, char* cmd, char* arg)
+{
+	ftp_sendResponse(s, 150, "Creating directory");
+	sprintf(tmpStr, "%s%s", currentPath, arg);
+
+	int ret;
+	ret=FSUSER_CreateDirectory(NULL, sdmcArchive, FS_makePath(PATH_CHAR, tmpStr));
+	print("\n create directory result %s (%08X) \n", tmpStr, ret);
+	ftp_sendResponse(s, 226, "created directory");
+}
+
+void ftp_cmd_RMD(int s, char* cmd, char* arg)
+{
+	ftp_sendResponse(s, 150, "Deleting folder");
+	sprintf(tmpStr, "%s%s", currentPath, arg);
+	
+	int ret;
+	ret=FSUSER_DeleteDirectory(NULL, sdmcArchive, FS_makePath(PATH_CHAR, arg));
+	print("\n delete result %s (%08X) \n", arg, ret);
+	ftp_sendResponse(s, 226, "delete completed");
+}
+
 void ftp_cmd_DELE(int s, char* cmd, char* arg)
 {
 	ftp_sendResponse(s, 150, "Deleting file");
@@ -161,6 +183,8 @@ ftp_cmd_s ftp_cmd[]=
 	{"TYPE", ftp_cmd_TYPE},
 	{"QUIT", ftp_cmd_QUIT},
 	{"DELE", ftp_cmd_DELE},
+	{"MKD",  ftp_cmd_MKD},
+	{"RMD",  ftp_cmd_RMD},
 };
 
 int ftp_cmd_num = sizeof(ftp_cmd)/sizeof(*ftp_cmd);
