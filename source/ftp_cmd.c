@@ -94,7 +94,7 @@ void ftp_cmd_DELE(int s, char* cmd, char* arg)
 	int ret;
 	ret=FSUSER_DeleteFile(NULL, sdmcArchive, FS_makePath(PATH_CHAR, arg));
 	print("\n delete result %s (%08X) \n", arg, ret);
-	ftp_sendResponse(s, 226, "delete completed");
+	ftp_sendResponse(s, 200, "delete completed");
 }
 
 void ftp_cmd_STOR(int s, char* cmd, char* arg)
