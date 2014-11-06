@@ -72,7 +72,7 @@ void ftp_cmd_MKD(int s, char* cmd, char* arg)
 	int ret;
 	ret=FSUSER_CreateDirectory(NULL, sdmcArchive, FS_makePath(PATH_CHAR, tmpStr));
 	print("\n create directory result %s (%08X) \n", tmpStr, ret);
-	ftp_sendResponse(s, 200, "created directory");
+	ftp_sendResponse(s, 257, "created directory");
 }
 
 void ftp_cmd_RMD(int s, char* cmd, char* arg)
@@ -83,7 +83,7 @@ void ftp_cmd_RMD(int s, char* cmd, char* arg)
 	int ret;
 	ret=FSUSER_DeleteDirectory(NULL, sdmcArchive, FS_makePath(PATH_CHAR, arg));
 	print("\n delete result %s (%08X) \n", arg, ret);
-	ftp_sendResponse(s, 200, "delete completed");
+	ftp_sendResponse(s, 250, "delete completed");
 }
 
 void ftp_cmd_DELE(int s, char* cmd, char* arg)
@@ -94,7 +94,7 @@ void ftp_cmd_DELE(int s, char* cmd, char* arg)
 	int ret;
 	ret=FSUSER_DeleteFile(NULL, sdmcArchive, FS_makePath(PATH_CHAR, arg));
 	print("\n delete result %s (%08X) \n", arg, ret);
-	ftp_sendResponse(s, 200, "delete completed");
+	ftp_sendResponse(s, 250, "delete completed");
 }
 
 void ftp_cmd_STOR(int s, char* cmd, char* arg)
