@@ -56,7 +56,7 @@ void drawFrame()
 	gfxDrawText(GFX_TOP, GFX_LEFT, NULL, "ftPONY v0.0003 gamma\n", 240-fontDefault.height*1, 10);
 	u32 ip = gethostid();
 	char bof[256];
-	sprintf(bof, "IP: %d.%d.%d.%d\n", ip & 0xFF, (ip>>8)&0xFF, (ip>>16)&0xFF, (ip>>24)&0xFF);
+	sprintf(bof, "IP: %lu.%lu.%lu.%lu\n", ip & 0xFF, (ip>>8)&0xFF, (ip>>16)&0xFF, (ip>>24)&0xFF);
 	gfxDrawText(GFX_TOP, GFX_LEFT, NULL, bof, 240-fontDefault.height*2, 10);
 
 	gfxDrawText(GFX_TOP, GFX_LEFT, NULL, quotes[curQuote], 240-fontDefault.height*3, 10);
