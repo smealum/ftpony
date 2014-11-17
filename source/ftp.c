@@ -6,6 +6,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <3ds.h>
+#include <fcntl.h>
 
 #include "output.h"
 #include "ftp.h"
@@ -72,6 +73,7 @@ int ftp_openCommandChannel()
 	
 	int ret=accept(listenfd, (struct sockaddr*)NULL, NULL);
 	closesocket(listenfd);
+	fcntl(ret, F_SETFL, O_NONBLOCK);
 
 	return ret;
 }
