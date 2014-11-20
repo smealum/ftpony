@@ -20,6 +20,8 @@ int dataPort=5001;
 char currentPath[4096];
 u32 currentIP;
 
+int listenfd;
+
 void ftp_init()
 {
 	Result ret;
@@ -36,6 +38,8 @@ void ftp_init()
 	sprintf(currentPath, "/");
 
 	currentIP=(u32)gethostid();
+
+	listenfd=-1;
 }
 
 void ftp_exit()
@@ -57,23 +61,30 @@ unsigned short htons(unsigned short v)
 
 int ftp_openCommandChannel()
 {
-	int listenfd;
-	struct sockaddr_in serv_addr;
+	if(listenfd<0)
+	{
+		struct sockaddr_in serv_addr;
 
-	listenfd = socket(AF_INET, SOCK_STREAM, 0);
-	memset(&serv_addr, '0', sizeof(serv_addr));
+		listenfd = socket(AF_INET, SOCK_STREAM, 0);
+		memset(&serv_addr, '0', sizeof(serv_addr));
 
-	serv_addr.sin_family = AF_INET;
-	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	serv_addr.sin_port = htons(commandPort); 
+		serv_addr.sin_family = AF_INET;
+		serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+		serv_addr.sin_port = htons(commandPort); 
 
-	bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)); 
+		bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)); 
+		fcntl(listenfd, F_SETFL, O_NONBLOCK);
 
-	listen(listenfd, 10); 
+		listen(listenfd, 10); 
+	}
 	
 	int ret=accept(listenfd, (struct sockaddr*)NULL, NULL);
-	closesocket(listenfd);
-	fcntl(ret, F_SETFL, O_NONBLOCK);
+	if(ret>=0)
+	{
+		closesocket(listenfd);
+		listenfd=-1;
+		fcntl(ret, F_SETFL, O_NONBLOCK);
+	}
 
 	return ret;
 }
@@ -136,14 +147,18 @@ int ftp_frame(int s)
 {
 	char buffer[512];
 	memset(buffer, 0, 512);
-	recv(s,buffer,512,0);
-	return ftp_processCommand(s,buffer);
+	int ret=recv(s,buffer,512,0);
+	if(!ret)return 1; //client has disconnected
+	else return ftp_processCommand(s,buffer);
 }
 
 int ftp_getConnection()
 {
 	int connfd = ftp_openCommandChannel();
-	print("received connection ! %d\ngreeting...",connfd);
-	ftp_sendResponse(connfd, 200, "hello");
+	if(connfd>=0)
+	{
+		print("received connection ! %d\ngreeting...",connfd);
+		ftp_sendResponse(connfd, 200, "hello");
+	}
 	return connfd;
 }

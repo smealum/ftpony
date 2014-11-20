@@ -6,6 +6,7 @@
 
 #include "costable.h"
 #include "text.h"
+#include "output.h"
 #include "ftp.h"
 
 char superStr[8192];
@@ -13,6 +14,7 @@ int cnt;
 
 char* quotes[]={"\"wow this is the worst thing i've seen in a while\"\n",
 				"\"<Namidairo> that hurts my brain\"\n",
+				"\"friendship is... something...\"\n",
 				"\"<mtheall> let's make it like really good code\"\n",
 				"\"//this code is not meant to be readable\"\n",
 				"\"// i just found it like this\"\n"};
@@ -53,10 +55,10 @@ void drawFrame()
 			bufAdr[v+2]=(pcCos(i+128-cnt)+4096)/32;
 		}
 	}
-	gfxDrawText(GFX_TOP, GFX_LEFT, NULL, "ftPONY v0.0003 gamma\n", 240-fontDefault.height*1, 10);
+	gfxDrawText(GFX_TOP, GFX_LEFT, NULL, "ftPONY v0.1 omega\n", 240-fontDefault.height*1, 10);
 	u32 ip = gethostid();
 	char bof[256];
-	sprintf(bof, "IP: %lu.%lu.%lu.%lu\n", ip & 0xFF, (ip>>8)&0xFF, (ip>>16)&0xFF, (ip>>24)&0xFF);
+	sprintf(bof, "IP: %lu.%lu.%lu.%lu, port 5000, press B at any time to exit\n", ip & 0xFF, (ip>>8)&0xFF, (ip>>16)&0xFF, (ip>>24)&0xFF);
 	gfxDrawText(GFX_TOP, GFX_LEFT, NULL, bof, 240-fontDefault.height*2, 10);
 
 	gfxDrawText(GFX_TOP, GFX_LEFT, NULL, quotes[curQuote], 240-fontDefault.height*3, 10);
@@ -74,7 +76,6 @@ int main()
 	srvInit();	
 	aptInit();
 	hidInit(NULL);
-	irrstInit(NULL);
 	gfxInit();
 
 	gfxSet3D(false);
@@ -85,33 +86,29 @@ int main()
 	superStr[0]=0;
 	ftp_init();
 
-	int connfd=ftp_getConnection();
-
-	APP_STATUS status;
-	while((status=aptGetStatus())!=APP_EXITING)
+	int connfd=-1;
+	while(aptMainLoop())
 	{
-		if(status == APP_RUNNING)
-		{
-			ftp_frame(connfd);
-			drawFrame();
 
-			hidScanInput();
-			if(hidKeysDown()&KEY_B)break;
+		if(connfd<0)connfd=ftp_getConnection();
+		else{
+			int ret=ftp_frame(connfd);
+			if(ret==1)
+			{
+				print("\n\nclient has disconnected.\npress B to exit, or wait for next client !\n\n");
+				connfd=-1;
+			}
 		}
-		else if(status == APP_SUSPENDING)
-		{
-			aptReturnToMenu();
-		}
-		else if(status == APP_SLEEPMODE)
-		{
-			aptWaitStatusEvent();
-		}
+		drawFrame();
+
+		hidScanInput();
+		if(hidKeysDown()&KEY_B)break;
+
 		gspWaitForEvent(GSPEVENT_VBlank0, false);
 	}
 
 	ftp_exit();
 	gfxExit();
-	irrstExit();
 	hidExit();
 	aptExit();
 	srvExit();
