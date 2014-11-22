@@ -66,7 +66,6 @@ void ftp_cmd_LIST(int s, char* cmd, char* arg)
 
 void ftp_cmd_MKD(int s, char* cmd, char* arg)
 {
-	ftp_sendResponse(s, 150, "Creating directory");
 	sprintf(tmpStr, "%s%s", currentPath, arg);
 
 	int ret;
@@ -77,7 +76,6 @@ void ftp_cmd_MKD(int s, char* cmd, char* arg)
 
 void ftp_cmd_RMD(int s, char* cmd, char* arg)
 {
-	ftp_sendResponse(s, 150, "Deleting folder");
 	sprintf(tmpStr, "%s%s", currentPath, arg);
 	
 	int ret;
@@ -88,7 +86,6 @@ void ftp_cmd_RMD(int s, char* cmd, char* arg)
 
 void ftp_cmd_DELE(int s, char* cmd, char* arg)
 {
-	ftp_sendResponse(s, 150, "Deleting file");
 	sprintf(tmpStr, "%s%s", currentPath, arg);
 	
 	int ret;
