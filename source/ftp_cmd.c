@@ -15,6 +15,8 @@
 
 static char tmpStr[4096];
 static u32 dataBuffer[DATA_BUFFER_SIZE/4];
+// Used to track the last RNFR command sent
+static char renameSource[4096];
 
 void unicodeToChar(char* dst, u16* src)
 {
@@ -167,6 +169,39 @@ void ftp_cmd_QUIT(int s, char* cmd, char* arg)
 	ftp_sendResponse(s, 221, "disconnecting");
 }
 
+void ftp_cmd_RNFR(int s, char* cmd, char* arg)
+{
+	snprintf(renameSource, sizeof(renameSource), "%s", arg);
+	ftp_sendResponse(s, 350, "send destination");
+}
+
+void ftp_cmd_RNTO(int s, char* cmd, char* arg)
+{
+	snprintf(tmpStr, sizeof(tmpStr), "%s", arg);
+
+	int ret = FSUSER_RenameFile(NULL,
+			sdmcArchive, FS_makePath(PATH_CHAR, renameSource),
+			sdmcArchive, FS_makePath(PATH_CHAR, arg));
+	print("\n rename result %s -> %s (%08X)", renameSource, arg, ret);
+
+	if (ret != 0)
+	{
+		// If the file rename failed, try a directory rename in case that's
+		// what the user is trying to do.
+		ret = FSUSER_RenameDirectory(NULL,
+				sdmcArchive, FS_makePath(PATH_CHAR, renameSource),
+				sdmcArchive, FS_makePath(PATH_CHAR, arg));
+		print("\n rename dir result %s -> %s (%08X)", renameSource, arg, ret);
+	}
+
+	if (ret == 0)
+		ftp_sendResponse(s, 250, "rename completed");
+	else
+		ftp_sendResponse(s, 550, "rename failed");
+
+	renameSource[0] = '\0';
+}
+
 ftp_cmd_s ftp_cmd[]=
 {
 	{"PWD", ftp_cmd_PWD},
@@ -182,6 +217,8 @@ ftp_cmd_s ftp_cmd[]=
 	{"DELE", ftp_cmd_DELE},
 	{"MKD",  ftp_cmd_MKD},
 	{"RMD",  ftp_cmd_RMD},
+	{"RNFR", ftp_cmd_RNFR},
+	{"RNTO", ftp_cmd_RNTO},
 };
 
 int ftp_cmd_num = sizeof(ftp_cmd)/sizeof(*ftp_cmd);
