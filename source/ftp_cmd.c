@@ -72,8 +72,13 @@ void ftp_cmd_MKD(int s, char* cmd, char* arg)
 
 	int ret;
 	ret=FSUSER_CreateDirectory(NULL, sdmcArchive, FS_makePath(PATH_CHAR, tmpStr));
-	print("\n create directory result %s (%08X)", tmpStr, ret);
-	ftp_sendResponse(s, 257, "created directory");
+	if(ret == PATH_EXISTS){
+		print("\n directory exists %s", tmpStr);
+		ftp_sendResponse(s, 521, "directory exists; no action");
+	}else{
+		print("\n create directory result %s (%08X)", tmpStr, ret);
+		ftp_sendResponse(s, 257, "created directory");
+	}
 }
 
 void ftp_cmd_RMD(int s, char* cmd, char* arg)
@@ -100,10 +105,18 @@ void ftp_cmd_STOR(int s, char* cmd, char* arg)
 {
 	ftp_sendResponse(s, 150, "opening binary data channel");
 	int data_s=ftp_openDataChannel();
+	int ret;
+
+	//Create the currentPath if it does not exist.
+	ret=FSUSER_CreateDirectory(NULL, sdmcArchive, FS_makePath(PATH_CHAR, currentPath));
+	if(ret == PATH_EXISTS){
+		print("\n directory exists %s", currentPath);
+	}else{
+		print("\n create directory result %s (%08X)", currentPath, ret);
+	}
 
 	sprintf(tmpStr, "%s%s",currentPath,arg);
 	Handle fileHandle;
-	int ret;
 	ret=FSUSER_OpenFile(NULL, &fileHandle, sdmcArchive, FS_makePath(PATH_CHAR, tmpStr), FS_OPEN_WRITE|FS_OPEN_CREATE, 0);
 	print("\n  storing %s (%08X)\n", tmpStr, ret);
 	u32 totalSize=0;
