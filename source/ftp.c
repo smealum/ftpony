@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <arpa/inet.h>
 #include <3ds.h>
 #include <fcntl.h>
 
@@ -45,18 +46,6 @@ void ftp_init()
 void ftp_exit()
 {
 	SOC_Shutdown();
-}
-
-unsigned long htonl(unsigned long v)
-{
-	u8* v2=(u8*)&v;
-	return (v2[0]<<24)|(v2[1]<<16)|(v2[2]<<8)|(v2[3]);
-}
-
-unsigned short htons(unsigned short v)
-{
-	u8* v2=(u8*)&v;
-	return (v2[0]<<8)|(v2[1]);
 }
 
 int ftp_openCommandChannel()
